@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { registerPlugin } from '@capacitor/core';
 import { Router } from '@angular/router';
-import type { ArVrPluginPlugin, ArVrSessionOptions } from 'capacitor-ar-vr-plugin';
+import type { ArVrPluginPlugin, ArVrSessionOptions, ArAvailabilityResult } from 'capacitor-ar-vr-plugin';
 
 const ArVrPlugin = registerPlugin<ArVrPluginPlugin>('ArVrPlugin');
 
@@ -21,6 +21,10 @@ export class ArVrService {
         this.router.navigateByUrl(data.url);
       }
     });
+  }
+
+  async checkAvailability(): Promise<ArAvailabilityResult> {
+    return ArVrPlugin.checkAvailability();
   }
 
   async startSession(options: ArVrSessionOptions) {
