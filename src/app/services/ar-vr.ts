@@ -15,7 +15,7 @@ export class ArVrService {
   }
 
   private async initListeners() {
-    await ArVrPlugin.addListener('onObjectSelected', (data) => {
+    await ArVrPlugin.addListener('onObjectSelected', (data: any) => {
       console.log('Object selected:', data);
       if (data.url) {
         this.router.navigateByUrl(data.url);
