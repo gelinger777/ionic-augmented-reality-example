@@ -87,6 +87,16 @@ export class HomePage implements OnInit {
         icon: '👗',
         rating: 4,
         votes: 881
+      },
+      {
+        id: 'vienna-opera',
+        lat: 48.2029,
+        lng: 16.3689,
+        label: 'Wiener Staatsoper',
+        url: '/details/vienna-opera',
+        icon: '🎭',
+        rating: 5,
+        votes: 14832
       }
     ];
     try {
