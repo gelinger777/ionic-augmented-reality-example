@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      AR/VR Plugin Demo
+      AR Real Estate
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -10,8 +10,8 @@
 <ion-content [fullscreen]="true" [style.--background]="isArMode ? 'transparent' : 'var(--ion-background-color)'">
 
   <div *ngIf="!isArMode" id="container" class="ion-padding ion-text-center">
-    <h1>Welcome to AR/VR Demo</h1>
-    <p>Place virtual anchors at GPS coordinates and interact with them.</p>
+    <h1>🏠 AR Property Finder</h1>
+    <p>Point your camera at buildings to see property details.</p>
 
     <!-- AR Status Badge -->
     <div *ngIf="arChecked" class="ar-status-badge" [class.available]="arAvailable" [class.unavailable]="!arAvailable">
@@ -24,7 +24,7 @@
 
     <ion-button (click)="startAR()" expand="block" shape="round" [disabled]="!arChecked">
       <ion-icon slot="start" name="camera-outline"></ion-icon>
-      Start AR Session
+      Explore Properties
     </ion-button>
 
     <ion-button *ngIf="arChecked && !arAvailable" (click)="checkAr()" expand="block" shape="round" fill="outline"
@@ -35,15 +35,10 @@
   </div>
 
   <div *ngIf="isArMode" class="ar-overlay">
-    <div class="center-reticle"></div>
-
     <div class="controls-bottom">
-      <ion-button (click)="toggleVR()" color="secondary" fill="solid" shape="round">
-        {{ isVrMode ? 'Disable VR' : 'Enable VR Mode' }}
-      </ion-button>
-
       <ion-button (click)="stopAR()" color="danger" fill="solid" shape="round">
-        Stop Session
+        <ion-icon slot="start" name="close-circle-outline"></ion-icon>
+        Stop
       </ion-button>
     </div>
   </div>
@@ -107,19 +102,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     pointer-events: none;
-  }
-
-  .center-reticle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    border: 2px solid white;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
   }
 
   .controls-bottom {
@@ -127,7 +111,7 @@
     bottom: 40px;
     width: 100%;
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     padding: 0 20px;
     pointer-events: auto;
   }

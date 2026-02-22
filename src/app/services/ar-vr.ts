@@ -16,7 +16,7 @@ export class ArVrService {
 
   private async initListeners() {
     await ArVrPlugin.addListener('onObjectSelected', (data: any) => {
-      console.log('Object selected:', data);
+      console.log('Property selected:', data);
       if (data.url) {
         this.router.navigateByUrl(data.url);
       }
@@ -33,9 +33,5 @@ export class ArVrService {
 
   async stopSession() {
     await ArVrPlugin.stopSession();
-  }
-
-  async toggleVRMode(enable: boolean) {
-    await ArVrPlugin.toggleVRMode({ enable });
   }
 }

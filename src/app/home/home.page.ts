@@ -10,7 +10,6 @@ import { ArVrService } from '../services/ar-vr';
 })
 export class HomePage implements OnInit {
   isArMode = false;
-  isVrMode = false;
   arAvailable = false;
   arStatus = '';
   arMessage = '';
@@ -42,7 +41,6 @@ export class HomePage implements OnInit {
   }
 
   async startAR() {
-    // Re-check availability before starting
     await this.checkAr();
 
     if (!this.arAvailable) {
@@ -51,56 +49,51 @@ export class HomePage implements OnInit {
     }
 
     const loading = await this.loadingController.create({
-      message: 'Starting AR session...',
+      message: 'Starting AR...',
       duration: 3000,
     });
     await loading.present();
 
     this.isArMode = true;
-    const mockPois = [
+
+    // Real Vienna buildings as demo POIs
+    const properties = [
       {
-        id: 'shop1',
-        lat: 0.0005,
-        lng: 0.0003,
-        label: 'Shopping center',
-        url: '/details/shop1',
-        icon: '🛒',
-        rating: 5,
-        votes: 2741
-      },
-      {
-        id: 'cafe1',
-        lat: 0.0003,
-        lng: -0.0004,
-        label: 'Coffee shop',
-        url: '/details/cafe1',
-        icon: '☕',
-        rating: 4,
-        votes: 210
-      },
-      {
-        id: 'fashion1',
-        lat: -0.0002,
-        lng: 0.0006,
-        label: 'Fashion shop',
-        url: '/details/fashion1',
-        icon: '👗',
-        rating: 4,
-        votes: 881
-      },
-      {
-        id: 'vienna-opera',
+        id: 'staatsoper',
         lat: 48.2029,
         lng: 16.3689,
         label: 'Wiener Staatsoper',
-        url: '/details/vienna-opera',
-        icon: '🎭',
-        rating: 5,
-        votes: 14832
-      }
+        url: '/details/staatsoper',
+        image: '',
+      },
+      {
+        id: 'stephansdom',
+        lat: 48.2082,
+        lng: 16.3738,
+        label: 'Stephansdom',
+        url: '/details/stephansdom',
+        image: '',
+      },
+      {
+        id: 'belvedere',
+        lat: 48.1915,
+        lng: 16.3808,
+        label: 'Schloss Belvedere',
+        url: '/details/belvedere',
+        image: '',
+      },
+      {
+        id: 'rathaus',
+        lat: 48.2108,
+        lng: 16.3575,
+        label: 'Wiener Rathaus',
+        url: '/details/rathaus',
+        image: '',
+      },
     ];
+
     try {
-      await this.arVrService.startSession({ pois: mockPois });
+      await this.arVrService.startSession({ pois: properties });
       await loading.dismiss();
     } catch (e: any) {
       await loading.dismiss();
@@ -118,13 +111,7 @@ export class HomePage implements OnInit {
 
   async stopAR() {
     this.isArMode = false;
-    this.isVrMode = false;
     await this.arVrService.stopSession();
-  }
-
-  async toggleVR() {
-    this.isVrMode = !this.isVrMode;
-    await this.arVrService.toggleVRMode(this.isVrMode);
   }
 
   private async showArError() {
