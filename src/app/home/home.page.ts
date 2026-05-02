@@ -1,6 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { AlertController, LoadingController } from '@ionic/angular';
-import { ArVrService } from '../services/ar-vr';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AlertController, LoadingController, ToastController } from '@ionic/angular';
+import type { CapabilitiesResult } from 'capacitor-geoar';
+
+import { GeoscanService } from '../services/geoscan.service';
+import type { Spot } from '../util/geo-math';
+import {
+  buildCapabilityGroups,
+  rowStatusIcon,
+  type CapabilityGroup,
+  type CapabilityRow,
+} from '../util/capability-rows';
 
 @Component({
   selector: 'app-home',
@@ -8,153 +17,131 @@ import { ArVrService } from '../services/ar-vr';
   styleUrls: ['home.page.scss'],
   standalone: false,
 })
-export class HomePage implements OnInit {
-  isArMode = false;
-  arAvailable = false;
-  arStatus = '';
-  arMessage = '';
-  arChecked = false;
+export class HomePage implements OnInit, OnDestroy {
+  arMode = false;
+  caps?: CapabilitiesResult;
+  capsChecked = false;
+  capabilityGroups: CapabilityGroup[] = [];
+
+  readonly spots$ = this.geoscan.spots$;
+  readonly statusIcon = rowStatusIcon;
 
   constructor(
-    private arVrService: ArVrService,
-    private alertController: AlertController,
-    private loadingController: LoadingController
-  ) { }
+    private readonly geoscan: GeoscanService,
+    private readonly alert: AlertController,
+    private readonly loading: LoadingController,
+    private readonly toast: ToastController,
+  ) {}
 
   async ngOnInit() {
-    await this.checkAr();
+    await this.refreshCapabilities();
   }
 
-  async checkAr() {
-    try {
-      const result = await this.arVrService.checkAvailability();
-      this.arAvailable = result.available;
-      this.arStatus = result.status;
-      this.arMessage = result.message;
-      this.arChecked = true;
-    } catch (e) {
-      this.arAvailable = false;
-      this.arStatus = 'unknown';
-      this.arMessage = 'Could not check AR availability.';
-      this.arChecked = true;
+  async ngOnDestroy() {
+    if (this.arMode) {
+      await this.geoscan.stop();
     }
   }
 
-  async startAR() {
-    await this.checkAr();
+  async refreshCapabilities() {
+    try {
+      this.caps = await this.geoscan.checkCapabilities();
+      this.capabilityGroups = buildCapabilityGroups(this.caps);
+    } catch {
+      this.caps = undefined;
+      this.capabilityGroups = [];
+    }
+    this.capsChecked = true;
+  }
 
-    if (!this.arAvailable) {
-      await this.showArError();
+  trackByRow(_i: number, row: CapabilityRow) {
+    return row.id;
+  }
+
+  trackByGroup(_i: number, group: CapabilityGroup) {
+    return group.name;
+  }
+
+  async startAr() {
+    await this.refreshCapabilities();
+    if (!this.caps?.ready) {
+      await this.showCapsBlockedAlert();
       return;
     }
 
-    const loading = await this.loadingController.create({
-      message: 'Starting AR...',
-      duration: 3000,
+    const loader = await this.loading.create({
+      message: 'Starting AR…',
+      duration: 4000,
     });
-    await loading.present();
-
-    this.isArMode = true;
-
-    // Real Vienna buildings as demo POIs
-    const properties = [
-      {
-        id: 'staatsoper',
-        lat: 48.2029,
-        lng: 16.3689,
-        label: 'Wiener Staatsoper',
-        url: '/details/staatsoper',
-        image: '',
-      },
-      {
-        id: 'stephansdom',
-        lat: 48.2082,
-        lng: 16.3738,
-        label: 'Stephansdom',
-        url: '/details/stephansdom',
-        image: '',
-      },
-      {
-        id: 'belvedere',
-        lat: 48.1915,
-        lng: 16.3808,
-        label: 'Schloss Belvedere',
-        url: '/details/belvedere',
-        image: '',
-      },
-      {
-        id: 'rathaus',
-        lat: 48.2108,
-        lng: 16.3575,
-        label: 'Wiener Rathaus',
-        url: '/details/rathaus',
-        image: '',
-      },
-    ];
+    await loader.present();
 
     try {
-      await this.arVrService.startSession({ pois: properties });
-      await loading.dismiss();
-    } catch (e: any) {
-      await loading.dismiss();
-      this.isArMode = false;
-      const errorMessage = e?.message || e?.errorMessage || 'An unknown error occurred while starting AR.';
-      const alert = await this.alertController.create({
-        header: '⚠️ AR Session Failed',
-        message: `<p>${errorMessage}</p>`,
-        cssClass: 'ar-error-alert',
+      await this.geoscan.start({ orientationHz: 30 });
+      this.arMode = true;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error starting AR.';
+      const alert = await this.alert.create({
+        header: 'AR session failed',
+        message,
         buttons: ['OK'],
       });
       await alert.present();
+    } finally {
+      await loader.dismiss();
     }
   }
 
-  async stopAR() {
-    this.isArMode = false;
-    await this.arVrService.stopSession();
+  async stopAr() {
+    this.arMode = false;
+    await this.geoscan.stop();
   }
 
-  private async showArError() {
-    const statusIcons: Record<string, string> = {
-      not_installed: '📦',
-      unsupported_device: '📱',
-      outdated: '🔄',
-      unknown: '❓',
-    };
-    const icon = statusIcons[this.arStatus] || '❓';
+  async onSpotTap(spot: Spot) {
+    const t = await this.toast.create({
+      message: `${spot.label} · ${spot.price ?? ''} · ${formatDistance(spot.distanceMeters)}`,
+      duration: 2200,
+      position: 'bottom',
+      buttons: [{ text: 'Close', role: 'cancel' }],
+    });
+    await t.present();
+  }
 
-    const tips: Record<string, string> = {
-      not_installed:
-        'Open the Google Play Store and search for "Google Play Services for AR", then install it.',
-      unsupported_device:
-        'Unfortunately, this device\'s hardware does not support AR. ' +
-        'You will need an ARCore-compatible device (most modern phones support it).',
-      outdated:
-        'Open the Google Play Store and update "Google Play Services for AR" to the latest version.',
-      unknown:
-        'Try restarting the app. If the problem persists, check that your device supports ARCore.',
-    };
-    const tip = tips[this.arStatus] || tips['unknown'];
+  formatDistance(meters: number): string {
+    return formatDistance(meters);
+  }
 
-    const alert = await this.alertController.create({
-      header: `${icon} AR Not Available`,
-      subHeader: this.arMessage,
-      message: `<strong>How to fix:</strong><br><br>${tip}`,
-      cssClass: 'ar-error-alert',
+  trackBySpot(_index: number, spot: Spot) {
+    return spot.id;
+  }
+
+  private async showCapsBlockedAlert() {
+    const reason = this.caps?.reason ?? 'unknown';
+    const messages: Record<string, string> = {
+      no_camera: 'This device has no camera.',
+      no_gps: 'This device has no GPS hardware.',
+      gps_disabled: 'Location services are turned off.',
+      no_accelerometer: 'This device has no accelerometer.',
+      no_gyroscope: 'This device has no gyroscope.',
+      no_magnetometer:
+        'This device has no compass. AR property finder needs a magnetometer to work.',
+      no_fused_orientation: 'This device cannot provide fused orientation.',
+      permission_denied: 'Camera or location permission was denied.',
+      web_unsupported: 'AR mode is only available on a device.',
+      unknown: 'AR is not available on this device right now.',
+    };
+    const alert = await this.alert.create({
+      header: 'AR not available',
+      message: messages[reason] ?? messages['unknown'],
       buttons: [
-        {
-          text: 'Retry',
-          role: 'cancel',
-          handler: () => {
-            this.checkAr();
-          },
-        },
-        {
-          text: 'OK',
-          role: 'confirm',
-        },
+        { text: 'Retry', handler: () => this.refreshCapabilities() },
+        { text: 'OK', role: 'cancel' },
       ],
     });
     await alert.present();
   }
+}
+
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
 }

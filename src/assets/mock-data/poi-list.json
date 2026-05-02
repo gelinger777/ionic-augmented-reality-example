@@ -1,0 +1,56 @@
+[
+  {
+    "id": "vienna-operngasse",
+    "lat": 48.2029,
+    "lng": 16.3689,
+    "label": "Operngasse Penthouse",
+    "subtitle": "4 rooms · 180 m²",
+    "price": "€2.8M",
+    "url": "/details/vienna-operngasse"
+  },
+  {
+    "id": "vienna-stephansplatz",
+    "lat": 48.2082,
+    "lng": 16.3738,
+    "label": "Stephansplatz Suite",
+    "subtitle": "3 rooms · 145 m²",
+    "price": "€2.1M",
+    "url": "/details/vienna-stephansplatz"
+  },
+  {
+    "id": "vienna-belvedere",
+    "lat": 48.1915,
+    "lng": 16.3808,
+    "label": "Belvedere Garden Loft",
+    "subtitle": "5 rooms · 220 m²",
+    "price": "€3.4M",
+    "url": "/details/vienna-belvedere"
+  },
+  {
+    "id": "vienna-rathaus",
+    "lat": 48.2108,
+    "lng": 16.3575,
+    "label": "Rathauspark Apartment",
+    "subtitle": "2 rooms · 85 m²",
+    "price": "€890K",
+    "url": "/details/vienna-rathaus"
+  },
+  {
+    "id": "vienna-karntnerstr",
+    "lat": 48.2070,
+    "lng": 16.3700,
+    "label": "Kärntner Straße Residence",
+    "subtitle": "3 rooms · 130 m²",
+    "price": "€1.7M",
+    "url": "/details/vienna-karntnerstr"
+  },
+  {
+    "id": "vienna-hofburg",
+    "lat": 48.2050,
+    "lng": 16.3650,
+    "label": "Hofburg View Studio",
+    "subtitle": "1 room · 55 m²",
+    "price": "€620K",
+    "url": "/details/vienna-hofburg"
+  }
+]
